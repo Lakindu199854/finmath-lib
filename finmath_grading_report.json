@@ -1,0 +1,59 @@
+{
+  "timestamp": "2025-08-28 02:35:54",
+  "project": "finmath-lib",
+  "project_info": {},
+  "total_score": 58,
+  "max_score": 100,
+  "percentage": 57.99999999999999,
+  "grade": "F",
+  "tests": [
+    {
+      "name": "Build System",
+      "passed": false,
+      "score": 0,
+      "max_score": 15,
+      "details": "Build failed: ",
+      "execution_time": 10.965955018997192
+    },
+    {
+      "name": "Unit Tests",
+      "passed": false,
+      "score": 0,
+      "max_score": 25,
+      "details": "Test execution failed: Command timed out after 900 seconds",
+      "execution_time": 900.5520470142365
+    },
+    {
+      "name": "Code Quality",
+      "passed": true,
+      "score": 15,
+      "max_score": 15,
+      "details": "JavaDoc generation successful; Checkstyle configuration found: finmath-checkstyle.xml; Found 754 Java source files; Found 140 test files",
+      "execution_time": 0.0
+    },
+    {
+      "name": "Finmath Features",
+      "passed": true,
+      "score": 18,
+      "max_score": 20,
+      "details": "montecarlo package: 288 files; finitedifference package: 14 files; marketdata package: 81 files; time package: 41 files; optimizer package: 21 files; Mathematical finance classes: Heston, LIBORMarketModel, BlackScholes, SABR, HullWhite",
+      "execution_time": 0.0
+    },
+    {
+      "name": "Mathematical Accuracy",
+      "passed": true,
+      "score": 20,
+      "max_score": 20,
+      "details": "Found 59 mathematical test files; Numerical tolerance tests in 44 files",
+      "execution_time": 0.0
+    },
+    {
+      "name": "Packaging",
+      "passed": true,
+      "score": 5,
+      "max_score": 5,
+      "details": "Created finmath-lib-6.0.21-SNAPSHOT-sources.jar (2479760 bytes)",
+      "execution_time": 223.6736786365509
+    }
+  ]
+}

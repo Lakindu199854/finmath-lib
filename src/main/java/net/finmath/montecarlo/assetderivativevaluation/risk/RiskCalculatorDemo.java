@@ -9,6 +9,9 @@ import net.finmath.montecarlo.assetderivativevaluation.products.AbstractAssetMon
 import net.finmath.stochastic.RandomVariable;
 import net.finmath.time.TimeDiscretization;
 
+import net.finmath.montecarlo.assetderivativevaluation.risk.LossArrayCalculator;
+import net.finmath.montecarlo.assetderivativevaluation.risk.ProductRiskCalculator;
+
 public class RiskCalculatorDemo {
 
 	public static void main(String[] args) throws Exception {
@@ -24,16 +27,16 @@ public class RiskCalculatorDemo {
 		double[] losses = new double[100];
 		for (int i = 0; i < losses.length; i++) losses[i] = i + 1;  // 1 to 100 (higher = worse)
 
-		double var10  = RiskCalculator.computeVaR(losses, 0.10);   // ~90
-		double cvar10 = RiskCalculator.computeCVaR(losses, 0.10);  // avg >= VaR  = 95.0
+		double var10  = net.finmath.montecarlo.assetderivativevaluation.risk.LossArrayCalculator.computeVaR(losses, 0.10);   // ~90
+		double cvar10 = net.finmath.montecarlo.assetderivativevaluation.risk.LossArrayCalculator.computeCVaR(losses, 0.10);  // avg >= VaR  = 95.0
 
 		System.out.println("VaR(10%)  = " + var10);
 		System.out.println("CVaR(10%) = " + cvar10);
 
 		// Another small example with ties
 		double[] tied = {1, 2, 2, 2, 10};
-		double var20t  = RiskCalculator.computeVaR(tied, 0.20);
-		double cvar20t = RiskCalculator.computeCVaR(tied, 0.20);
+		double var20t  = net.finmath.montecarlo.assetderivativevaluation.risk.LossArrayCalculator.computeVaR(tied, 0.20);
+		double cvar20t = net.finmath.montecarlo.assetderivativevaluation.risk.LossArrayCalculator.computeCVaR(tied, 0.20);
 		System.out.println("With ties {1,2,2,2,10}, VaR(20%)=" + var20t + ", CVaR(20%)=" + cvar20t);
 	}
 
@@ -89,16 +92,16 @@ public class RiskCalculatorDemo {
 		DummyModel model = new DummyModel();
 
 		double alpha = 0.20;
-		double var = RiskCalculator.computeVaRFromProduct(model, product, 0.0, alpha);
-		double es  = RiskCalculator.computeCVaRFromProduct(model, product, 0.0, alpha);
+		double var = net.finmath.montecarlo.assetderivativevaluation.risk.ProductRiskCalculator.computeVaRFromProduct(model, product, 0.0, alpha);
+		double es  = net.finmath.montecarlo.assetderivativevaluation.risk.ProductRiskCalculator.computeCVaRFromProduct(model, product, 0.0, alpha);
 
 		System.out.println("FromProduct VaR(20%) = " + var);
 		System.out.println("FromProduct CVaR(20%)= " + es);
 
 		// Sanity check: do the same manually by converting payoff→loss = -pnl
 		double[] loss = Arrays.stream(pnlPaths).map(x -> -x).toArray();
-		double varCheck = RiskCalculator.computeVaR(loss, alpha);
-		double esCheck  = RiskCalculator.computeCVaR(loss, alpha);
+		double varCheck = net.finmath.montecarlo.assetderivativevaluation.risk.LossArrayCalculator.computeVaR(loss, alpha);
+		double esCheck  = net.finmath.montecarlo.assetderivativevaluation.risk.LossArrayCalculator.computeCVaR(loss, alpha);
 		System.out.println("Manual check: VaR=" + varCheck + ", CVaR=" + esCheck);
 	}
 

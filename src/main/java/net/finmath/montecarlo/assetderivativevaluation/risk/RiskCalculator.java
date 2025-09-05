@@ -6,6 +6,9 @@ import net.finmath.montecarlo.assetderivativevaluation.AssetModelMonteCarloSimul
 import net.finmath.montecarlo.assetderivativevaluation.products.AbstractAssetMonteCarloProduct;
 import net.finmath.stochastic.RandomVariable;
 
+import net.finmath.montecarlo.assetderivativevaluation.risk.LossArrayCalculator;
+import net.finmath.montecarlo.assetderivativevaluation.risk.ProductRiskCalculator;
+
 /**
  Risk metrics based on Monte Carlo samples.
 
@@ -108,50 +111,20 @@ public final class RiskCalculator {
 
 	/**
 	 * VaR for raw loss samples (higher = worse).
+	 * @deprecated Use {@link LossArrayCalculator#computeVaR(double[], double)} instead.
 	 */
+	@Deprecated
 	public static double computeVaR(final double[] losses, final double alpha) {
-		if (losses == null) {
-			throw new NullPointerException("losses must not be null");
-		}
-		validateAlpha(alpha);
-		if (losses.length == 0) {
-			throw new IllegalArgumentException("losses must have length > 0");
-		}
-		// Upper-tail VaR at (1 - alpha)
-		double[] copy = Arrays.copyOf(losses, losses.length);
-		Arrays.sort(copy); // ascending
-		int n = copy.length;
-		// index for p-th percentile with p = (1 - alpha)
-		double p = 1.0 - alpha;
-		int idx = (int)Math.ceil(p * n) - 1;
-		idx = Math.max(0, Math.min(n - 1, idx));
-		return copy[idx];
+		return LossArrayCalculator.computeVaR(losses, alpha);
 	}
 
 	/**
 	 * CVaR for raw loss samples (higher = worse).
+	 * @deprecated Use {@link LossArrayCalculator#computeCVaR(double[], double)} instead.
 	 */
+	@Deprecated
 	public static double computeCVaR(final double[] losses, final double alpha) {
-		if (losses == null) {
-			throw new NullPointerException("losses must not be null");
-		}
-		validateAlpha(alpha);
-		if (losses.length == 0) {
-			throw new IllegalArgumentException("losses must have length > 0");
-		}
-		final double var = computeVaR(losses, alpha);
-		double sum = 0.0;
-		int cnt = 0;
-		for (double v : losses) {
-			if (v >= var) {
-				sum += v;
-				cnt++;
-			}
-		}
-		if (cnt == 0) {
-			return var; // conservative fallback
-		}
-		return sum / cnt;
+		return LossArrayCalculator.computeCVaR(losses, alpha);
 	}
 
 	/**
@@ -159,47 +132,30 @@ public final class RiskCalculator {
 	 * If your payoff is already a loss, pass it directly to {@link #computeVaR(RandomVariable, double)}.
 	 *
 	 * @param evaluationTime    usually the product's maturity or reporting time (e.g. 0.0 for present value)
+	 * @deprecated Use {@link ProductRiskCalculator#computeVaRFromProduct(AssetModelMonteCarloSimulationModel, AbstractAssetMonteCarloProduct, double, double)} instead.
 	 */
+	@Deprecated
 	public static double computeVaRFromProduct(
 			final AssetModelMonteCarloSimulationModel model,
 			final AbstractAssetMonteCarloProduct product,
 			final double evaluationTime,
 			final double alpha
 	) throws Exception {
-		if (model == null) {
-			throw new NullPointerException("model must not be null");
-		}
-		if (product == null) {
-			throw new NullPointerException("product must not be null");
-		}
-		validateAlpha(alpha);
-
-		// Interpret product value as P&L and convert to loss = -P&L
-		final RandomVariable pnl = product.getValue(evaluationTime, model);
-		final RandomVariable loss = pnl.mult(-1.0);
-		return computeVaR(loss, alpha);
+		return ProductRiskCalculator.computeVaRFromProduct(model, product, evaluationTime, alpha);
 	}
 
 	/**
 	 * Convenience: compute CVaR from a simulated product by interpreting payoff as P&L and converting to loss.
+	 * @deprecated Use {@link ProductRiskCalculator#computeCVaRFromProduct(AssetModelMonteCarloSimulationModel, AbstractAssetMonteCarloProduct, double, double)} instead.
 	 */
+	@Deprecated
 	public static double computeCVaRFromProduct(
 			final AssetModelMonteCarloSimulationModel model,
 			final AbstractAssetMonteCarloProduct product,
 			final double evaluationTime,
 			final double alpha
 	) throws Exception {
-		if (model == null) {
-			throw new NullPointerException("model must not be null");
-		}
-		if (product == null) {
-			throw new NullPointerException("product must not be null");
-		}
-		validateAlpha(alpha);
-
-		final RandomVariable pnl = product.getValue(evaluationTime, model);
-		final RandomVariable loss = pnl.mult(-1.0);
-		return computeCVaR(loss, alpha);
+		return ProductRiskCalculator.computeCVaRFromProduct(model, product, evaluationTime, alpha);
 	}
 
 	/**
@@ -232,7 +188,7 @@ public final class RiskCalculator {
 	 * Helpers
 	 * ********************************************************************************************/
 
-	private static void validateAlpha(final double alpha) {
+	/* package */ static void validateAlpha(final double alpha) {
 		if (!(alpha > 0.0 && alpha < 1.0)) {
 			throw new IllegalArgumentException("alpha must be in (0,1). Given: " + alpha);
 		}

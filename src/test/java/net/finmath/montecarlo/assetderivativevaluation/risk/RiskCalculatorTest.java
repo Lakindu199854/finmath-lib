@@ -12,6 +12,9 @@ import net.finmath.montecarlo.assetderivativevaluation.products.AbstractAssetMon
 import net.finmath.stochastic.RandomVariable;
 import net.finmath.time.TimeDiscretization;
 
+import net.finmath.montecarlo.assetderivativevaluation.risk.LossArrayCalculator;
+import net.finmath.montecarlo.assetderivativevaluation.risk.ProductRiskCalculator;
+
 
 public class RiskCalculatorTest {
 
@@ -25,8 +28,8 @@ public class RiskCalculatorTest {
 		double[] losses = new double[100];
 		for (int i = 0; i < losses.length; i++) losses[i] = i + 1; // 1..100
 
-		double var10  = RiskCalculator.computeVaR(losses, 0.10);   // 90th percentile ≈ 90
-		double cvar10 = RiskCalculator.computeCVaR(losses, 0.10);  // avg of 90..100 = 95.0
+		double var10  = LossArrayCalculator.computeVaR(losses, 0.10);   // 90th percentile ≈ 90
+		double cvar10 = LossArrayCalculator.computeCVaR(losses, 0.10);  // avg of 90..100 = 95.0
 
 		assertEquals(90.0, var10, 1e-9);
 		assertEquals(95.0, cvar10, 1e-9);
@@ -37,24 +40,24 @@ public class RiskCalculatorTest {
 	@DisplayName("Array – invalid alpha throws")
 	void array_invalid_alpha() {
 		double[] losses = {1,2,3};
-		assertThrows(IllegalArgumentException.class, () -> RiskCalculator.computeVaR(losses, 0.0));
-		assertThrows(IllegalArgumentException.class, () -> RiskCalculator.computeVaR(losses, 1.0));
-		assertThrows(IllegalArgumentException.class, () -> RiskCalculator.computeCVaR(losses, 0.0));
-		assertThrows(IllegalArgumentException.class, () -> RiskCalculator.computeCVaR(losses, 1.0));
+		assertThrows(IllegalArgumentException.class, () -> LossArrayCalculator.computeVaR(losses, 0.0));
+		assertThrows(IllegalArgumentException.class, () -> LossArrayCalculator.computeVaR(losses, 1.0));
+		assertThrows(IllegalArgumentException.class, () -> LossArrayCalculator.computeCVaR(losses, 0.0));
+		assertThrows(IllegalArgumentException.class, () -> LossArrayCalculator.computeCVaR(losses, 1.0));
 	}
 
 	@Test
 	@DisplayName("Array – empty input throws")
 	void array_empty_throws() {
-		assertThrows(IllegalArgumentException.class, () -> RiskCalculator.computeVaR(new double[]{}, 0.05));
-		assertThrows(IllegalArgumentException.class, () -> RiskCalculator.computeCVaR(new double[]{}, 0.05));
+		assertThrows(IllegalArgumentException.class, () -> LossArrayCalculator.computeVaR(new double[]{}, 0.05));
+		assertThrows(IllegalArgumentException.class, () -> LossArrayCalculator.computeCVaR(new double[]{}, 0.05));
 	}
 
 	@Test
 	@DisplayName("Array – null input throws NPE")
 	void array_null_input() {
-		assertThrows(NullPointerException.class, () -> RiskCalculator.computeVaR((double[]) null, 0.10));
-		assertThrows(NullPointerException.class, () -> RiskCalculator.computeCVaR((double[]) null, 0.10));
+		assertThrows(NullPointerException.class, () -> LossArrayCalculator.computeVaR((double[]) null, 0.10));
+		assertThrows(NullPointerException.class, () -> LossArrayCalculator.computeCVaR((double[]) null, 0.10));
 	}
 
 	/* =======================================================================
@@ -222,13 +225,13 @@ public class RiskCalculatorTest {
 		double alpha = 0.20;
 
 		// Values produced by the helpers (losses = -P&L inside the helper)
-		double varFromHelper  = RiskCalculator.computeVaRFromProduct(model, product, 0.0, alpha);
-		double cvarFromHelper = RiskCalculator.computeCVaRFromProduct(model, product, 0.0, alpha);
+		double varFromHelper  = ProductRiskCalculator.computeVaRFromProduct(model, product, 0.0, alpha);
+		double cvarFromHelper = ProductRiskCalculator.computeCVaRFromProduct(model, product, 0.0, alpha);
 
 		// Build the baseline using the SAME quantile convention (RV-based)
 		double[] loss = Arrays.stream(pnl).map(x -> -x).toArray();              // convert P&L -> loss
-		RandomVariable lossRV = new RandomVariableFromDoubleArray(0.0, loss);   // use RandomVariable
-		double varBaseline  = RiskCalculator.computeVaR(lossRV, alpha);         // not the array overload
+		RandomVariable lossRV = new RandomVariableFromDoubleArray(0.0, loss);
+		double varBaseline  = RiskCalculator.computeVaR(lossRV, alpha);
 		double cvarBaseline = RiskCalculator.computeCVaR(lossRV, alpha);
 
 		assertEquals(varBaseline,  varFromHelper,  1e-12);
@@ -245,13 +248,13 @@ public class RiskCalculatorTest {
 		DummyModel model = new DummyModel();
 
 		assertThrows(NullPointerException.class, () ->
-				RiskCalculator.computeVaRFromProduct(null, product, 0.0, 0.10));
+				ProductRiskCalculator.computeVaRFromProduct(null, product, 0.0, 0.10));
 		assertThrows(NullPointerException.class, () ->
-				RiskCalculator.computeVaRFromProduct(model, null, 0.0, 0.10));
+				ProductRiskCalculator.computeVaRFromProduct(model, null, 0.0, 0.10));
 		assertThrows(NullPointerException.class, () ->
-				RiskCalculator.computeCVaRFromProduct(null, product, 0.0, 0.10));
+				ProductRiskCalculator.computeCVaRFromProduct(null, product, 0.0, 0.10));
 		assertThrows(NullPointerException.class, () ->
-				RiskCalculator.computeCVaRFromProduct(model, null, 0.0, 0.10));
+				ProductRiskCalculator.computeCVaRFromProduct(model, null, 0.0, 0.10));
 	}
 
 	@Test
@@ -262,8 +265,8 @@ public class RiskCalculatorTest {
 		DummyModel model = new DummyModel();
 
 		assertThrows(IllegalArgumentException.class, () ->
-				RiskCalculator.computeVaRFromProduct(model, product, 0.0, 0.0));
+				ProductRiskCalculator.computeVaRFromProduct(model, product, 0.0, 0.0));
 		assertThrows(IllegalArgumentException.class, () ->
-				RiskCalculator.computeCVaRFromProduct(model, product, 0.0, 1.0));
+				ProductRiskCalculator.computeCVaRFromProduct(model, product, 0.0, 1.0));
 	}
 }
